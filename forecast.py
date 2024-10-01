@@ -7,11 +7,11 @@
 Use YR-NO to lookup the weather forecast.
 
 TODO:
-- Add UserAgent pointing to repo: "AcmeWeatherApp/0.9 github.com/acmeweatherapp"
 - Add location
 - Read .env file
 - Cache data locally
 - Create directory structure at initial startup
+- Error handling
 '''
 
 # Import modules
