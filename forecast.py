@@ -70,14 +70,14 @@ def main():
     print("#" * 10)
     for k, v in instant["data"].items():
         if k == "instant":
-            print(f"Air pressure:\t{v["details"]["air_pressure_at_sea_level"]}")
-            print(f"Air temperature:\t{v["details"]["air_temperature"]}")
-            print(f"Cloudiness:\t{v["details"]["cloud_area_fraction"]}")
-            print(f"Humidity:\t{v["details"]["relative_humidity"]}")
-            print(f"Wind direction:\t{v["details"]["wind_from_direction"]}")
-            print(f"Wind speed:\t{v["details"]["wind_speed"]}")
+            print(f"Air pressure:\t{v['details']['air_pressure_at_sea_level']}")
+            print(f"Air temperature:\t{v['details']['air_temperature']}")
+            print(f"Cloudiness:\t{v['details']['cloud_area_fraction']}")
+            print(f"Humidity:\t{v['details']['relative_humidity']}")
+            print(f"Wind direction:\t{v['details']['wind_from_direction']}")
+            print(f"Wind speed:\t{v['details']['wind_speed']}")
         else:
-            print(f"Summary:\t{v["summary"]}")
+            print(f"Summary:\t{v['summary']}")
 
 
 if __name__ == "__main__":
