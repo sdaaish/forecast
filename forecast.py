@@ -30,9 +30,10 @@ USER_AGENT = "Forecast/0.1.0 github.com/sdaaish/forecast"
 headers = {"User-Agent": USER_AGENT}
 
 
-def get_forecast(uri, params):
+def get_forecast(uri, location):
+    """Get the forecast for the location."""
     try:
-        response = requests.get(COMPACT_URI, params=LOCATION, headers=headers)
+        response = requests.get(uri, params=location, headers=headers, timeout=5)
     except ConnectionError():
         print(repr(sys.exception()))
     # or response.raise_for_status() # ensure we notice bad responses
@@ -40,6 +41,7 @@ def get_forecast(uri, params):
 
 
 def save_to_file(file, resp):
+    """Save response to a JSON file."""
     p = Path(file).resolve()
     with open(p, encoding="utf-8", mode="w") as f:
         json.dump(resp, f, indent=2)
@@ -47,6 +49,7 @@ def save_to_file(file, resp):
 
 # Define main function
 def main():
+    """Run the main program."""
     r = get_forecast(COMPACT_URI, LOCATION)
 
     print(r.url)
