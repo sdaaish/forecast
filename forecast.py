@@ -18,10 +18,11 @@ TODO:
 """
 
 # Import modules
-import requests
-from pathlib import Path
 import json
 import sys
+from pathlib import Path
+
+import requests
 
 COMPACT_URI = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
 LOCATION = {"lat": 60.10, "lon": 9.58}
