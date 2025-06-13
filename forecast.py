@@ -19,15 +19,26 @@ TODO:
 
 # Import modules
 import json
+import os
 import sys
 from pathlib import Path
-
+from datetime import datetime, timezone
 import requests
 
 COMPACT_URI = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
 LOCATION = {"lat": 60.10, "lon": 9.58}
 USER_AGENT = "Forecast/0.1.0 github.com/sdaaish/forecast"
 headers = {"User-Agent": USER_AGENT}
+SYMBOLS = {
+    "partlycloudy_day": "BIRTHDAY CAKE",
+    "partlycloudy_night": "night",
+    "fair_night": "fnight",
+    "fair_day": "fday",
+    "clearsky_day": "cday",
+    "clearsky_night": "cnight",
+    "cloudy": "cloudy",
+    "lightrain": "RAIN",
+}
 
 
 def get_forecast(uri, location):
@@ -52,24 +63,42 @@ def main():
     """Run the main program."""
     r = get_forecast(COMPACT_URI, LOCATION)
 
-    print(r.url)
-    print(r.status_code)
+    #    print(r.url)
+    #    print(r.status_code)
+    if r.status_code != 200:
+        print("Response from server failed.")
+        os._exit(1)
+
     data = r.json()
     save_to_file("response.json", data)
 
     meta = data["properties"]["meta"]
+    update_time = meta["updated_at"]
     coordinates = data["geometry"]["coordinates"]
     instant = data["properties"]["timeseries"][0]
-    print(f"Meta: {meta['units']}")
-    print(meta["units"], coordinates)
-    print(f'{instant["time"]}, {instant["data"]["instant"]["details"]}')
+    print(f"Forecast updated: {update_time}")
+    # print(meta["units"], coordinates)
+    # print(f'{instant["time"]}, {instant["data"]["instant"]["details"]}')
 
     print("#" * 10)
     for k, v in instant["data"].items():
         print(f"Key: {k}:")
 
         for y in v:
-            print(f"Value:  {y}: {v[y]}")
+            # print(f"Value:  {y} {v[y]}")
+            if y == "summary":
+                sky = v[y]
+                symbol_code = sky["symbol_code"]
+                symbol = SYMBOLS[symbol_code]
+                # Print this for now, need to understand UTF8
+                print(f"Sky view: {symbol}")
+
+            if y == "details":
+                details = v[y]
+                try:
+                    print(f"Precipitation: {details['precipitation_amount']}")
+                except KeyError:
+                    print("No info.")
 
     print("#" * 10)
     for k, v in instant["data"].items():
