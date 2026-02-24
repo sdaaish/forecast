@@ -2,13 +2,15 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo>=0.20.1",
+#     "pydantic==2.12.5",
+#     "pydantic-ai==1.63.0",
 #     "requests==2.32.5",
 # ]
 # ///
 
 import marimo
 
-__generated_with = "0.20.1"
+__generated_with = "0.20.2"
 app = marimo.App()
 
 
@@ -62,7 +64,6 @@ def _(mo):
 def _(mo):
     search_input = mo.ui.text(placeholder="Search for a city or place...", label="Location Search")
     search_form = search_input.form(label="Search")
-
     return (search_form,)
 
 
@@ -83,9 +84,13 @@ def _(HEADERS, NOMINATIM_URI, mo, requests, search_form, set_lat, set_lon):
             results = resp.json()
             if results:
                 res = results[0]
-                set_lat(float(res["lat"]))
-                set_lon(float(res["lon"]))
-                search_results = mo.md(f"✅ Found: **{res['display_name']}**")
+                lat, lon = float(res["lat"]), float(res["lon"])
+                set_lat(lat)
+                set_lon(lon)
+                search_results = mo.md(
+                    f"✅ Found: **{res['display_name']}**\n\n"
+                    f"📍 **Coordinates:** {lat}°N, {lon}°E"
+                )
             else:
                 search_results = mo.md("⚠️ No locations found.")
         except Exception as e:
@@ -97,30 +102,6 @@ def _(HEADERS, NOMINATIM_URI, mo, requests, search_form, set_lat, set_lon):
         search_results if search_results else mo.md("")
     ])
     return
-
-
-@app.cell
-def _(get_lat, get_lon, mo):
-    # Form for manual adjustment or confirmation
-    location_form = (
-        mo.md(
-            """
-            ### 📍 Forecast Location
-            Adjust coordinates manually or use the search box above.
-
-            {lat}
-            {lon}
-            """
-        )
-        .batch(
-            lat=mo.ui.number(value=get_lat(), label="Latitude", step=0.01),
-            lon=mo.ui.number(value=get_lon(), label="Longitude", step=0.01),
-        )
-        .form(label="Get Forecast")
-    )
-
-    location_form
-    return (location_form,)
 
 
 @app.cell
@@ -138,10 +119,8 @@ def _(HEADERS, requests):
 
 
 @app.cell
-def _(COMPACT_URI, get_forecast, location_form, mo):
-    mo.stop(location_form.value is None, mo.md("Submit 'Get Forecast' to see the weather."))
-
-    data = get_forecast(COMPACT_URI, location_form.value)
+def _(COMPACT_URI, get_forecast, get_lat, get_lon):
+    data = get_forecast(COMPACT_URI, {"lat": get_lat(), "lon": get_lon()})
     return (data,)
 
 
