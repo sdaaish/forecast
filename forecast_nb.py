@@ -2,8 +2,6 @@
 # requires-python = ">=3.12"
 # dependencies = [
 #     "marimo>=0.20.1",
-#     "pydantic==2.12.5",
-#     "pydantic-ai==1.63.0",
 #     "requests==2.32.5",
 # ]
 # ///
@@ -62,7 +60,9 @@ def _(mo):
 
 @app.cell
 def _(mo):
-    search_input = mo.ui.text(placeholder="Search for a city or place...", label="Location Search")
+    search_input = mo.ui.text(
+        placeholder="Search for a city or place...", label="Location Search"
+    )
     search_form = search_input.form(label="Search")
     return (search_form,)
 
@@ -76,10 +76,12 @@ def _(HEADERS, NOMINATIM_URI, mo, requests, search_form, set_lat, set_lon):
         params = {
             "q": current_search,
             "format": "json",
-            "limit": 1
+            "limit": 1,
         }
         try:
-            resp = requests.get(NOMINATIM_URI, params=params, headers=HEADERS, timeout=5)
+            resp = requests.get(
+                NOMINATIM_URI, params=params, headers=HEADERS, timeout=5
+            )
             resp.raise_for_status()
             results = resp.json()
             if results:
@@ -87,20 +89,19 @@ def _(HEADERS, NOMINATIM_URI, mo, requests, search_form, set_lat, set_lon):
                 lat, lon = float(res["lat"]), float(res["lon"])
                 set_lat(lat)
                 set_lon(lon)
-                search_results = mo.md(
-                    f"✅ Found: **{res['display_name']}**\n\n"
-                    f"📍 **Coordinates:** {lat}°N, {lon}°E"
-                )
+                search_results = mo.md(f"✅ Found: **{res['display_name']}**\n\n")
             else:
                 search_results = mo.md("⚠️ No locations found.")
         except Exception as e:
             search_results = mo.md(f"❌ Error searching: {e}")
 
-    mo.vstack([
-        mo.md("### 🔍 Find a Place"),
-        search_form,
-        search_results if search_results else mo.md("")
-    ])
+    mo.vstack(
+        [
+            mo.md("### 🔍 Find a Place"),
+            search_form,
+            search_results if search_results else mo.md(""),
+        ]
+    )
     return
 
 
@@ -126,7 +127,9 @@ def _(COMPACT_URI, get_forecast, get_lat, get_lon):
 
 @app.cell
 def _(SYMBOLS, data, datetime, mo):
-    mo.stop("error" in data, mo.md(f"⚠️ **Error fetching forecast:** {data.get('error')}"))
+    mo.stop(
+        "error" in data, mo.md(f"⚠️ **Error fetching forecast:** {data.get('error')}")
+    )
 
     meta = data["properties"]["meta"]
     update_time = meta["updated_at"]
@@ -150,19 +153,25 @@ def _(SYMBOLS, data, datetime, mo):
 
         # Collect temperatures
         if "air_temperature" in entry["data"]["instant"]["details"]:
-            daily_data[day_str]["temps"].append(entry["data"]["instant"]["details"]["air_temperature"])
+            daily_data[day_str]["temps"].append(
+                entry["data"]["instant"]["details"]["air_temperature"]
+            )
 
         # Collect symbols from 6-hour windows if available
         if "next_6_hours" in entry["data"]:
-            daily_data[day_str]["symbols"].append(entry["data"]["next_6_hours"]["summary"]["symbol_code"])
+            daily_data[day_str]["symbols"].append(
+                entry["data"]["next_6_hours"]["summary"]["symbol_code"]
+            )
 
     # Build 3-day cards
     forecast_cards = []
     today = datetime.now().strftime("%Y-%m-%d")
     count = 0
     for day, info in daily_data.items():
-        if day == today: continue # Skip today for the multi-day list
-        if count >= 3: break
+        if day == today:
+            continue  # Skip today for the multi-day list
+        if count >= 3:
+            break
 
         max_t = max(info["temps"]) if info["temps"] else "N/A"
         min_t = min(info["temps"]) if info["temps"] else "N/A"
@@ -179,32 +188,49 @@ def _(SYMBOLS, data, datetime, mo):
             **{day_name}**
             # {symbol_display.split()[0]}
             **{max_t}° / {min_t}°**
-            { " ".join(symbol_display.split()[1:]) }
-            """).style({"text-align": "center", "padding": "10px", "border": "1px solid #ddd", "border-radius": "8px"})
+            {" ".join(symbol_display.split()[1:])}
+            """).style(
+                {
+                    "text-align": "center",
+                    "padding": "10px",
+                    "border": "1px solid #ddd",
+                    "border-radius": "8px",
+                }
+            )
         )
         count += 1
 
-    current_ui = mo.vstack([
-        mo.md(f"## Weather Forecast"),
-        mo.md(f"**Updated at:** {update_time}"),
-        mo.md(f"**Coordinates:** {coords[1]}°N, {coords[0]}°E"),
-        mo.md(f"### Current Conditions: {symbol_text}"),
-        mo.hstack([
-            mo.stat(label="Temperature", value=f"{details['air_temperature']}°C"),
-            mo.stat(label="Wind Speed", value=f"{details['wind_speed']} m/s"),
-            mo.stat(label="Humidity", value=f"{details['relative_humidity']}%"),
-            mo.stat(label="Pressure", value=f"{details['air_pressure_at_sea_level']} hPa"),
-        ], justify="start")
-    ])
+    current_ui = mo.vstack(
+        [
+            mo.md(f"## Weather Forecast"),
+            mo.md(f"**Updated at:** {update_time}"),
+            mo.md(f"**Coordinates:** {coords[1]}°N, {coords[0]}°E"),
+            mo.md(f"### Current Conditions: {symbol_text}"),
+            mo.hstack(
+                [
+                    mo.stat(
+                        label="Temperature", value=f"{details['air_temperature']}°C"
+                    ),
+                    mo.stat(label="Wind Speed", value=f"{details['wind_speed']} m/s"),
+                    mo.stat(label="Humidity", value=f"{details['relative_humidity']}%"),
+                    mo.stat(
+                        label="Pressure",
+                        value=f"{details['air_pressure_at_sea_level']} hPa",
+                    ),
+                ],
+                justify="start",
+            ),
+        ]
+    )
 
-    multi_day_ui = mo.vstack([
-        mo.md("### 📅 Next 3 Days"),
-        mo.hstack(forecast_cards, justify="start")
-    ])
+    multi_day_ui = mo.vstack(
+        [mo.md("### 📅 Next 3 Days"), mo.hstack(forecast_cards, justify="start")]
+    )
 
     mo.vstack([current_ui, multi_day_ui])
     return
 
 
 if __name__ == "__main__":
+    app.run()
     app.run()
